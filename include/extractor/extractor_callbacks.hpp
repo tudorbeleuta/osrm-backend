@@ -25,6 +25,7 @@ class ExtractionContainers;
 struct InputRestrictionContainer;
 struct ExtractionNode;
 struct ExtractionWay;
+struct ProfileProperties;
 
 /**
  * This class is uses by the extractor with the results of the
@@ -45,9 +46,11 @@ class ExtractorCallbacks
                        guidance::TurnLaneDescription_hash>
         lane_description_map;
     ExtractionContainers &external_memory;
+    bool fallback_to_duration;
 
   public:
-    explicit ExtractorCallbacks(ExtractionContainers &extraction_containers);
+    explicit ExtractorCallbacks(ExtractionContainers &extraction_containers,
+                                const ProfileProperties &properties);
 
     ExtractorCallbacks(const ExtractorCallbacks &) = delete;
     ExtractorCallbacks &operator=(const ExtractorCallbacks &) = delete;
