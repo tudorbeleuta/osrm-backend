@@ -507,8 +507,8 @@ Extractor::BuildEdgeExpandedGraph(lua_State *lua_state,
 
     std::vector<std::uint32_t> turn_lane_offsets;
     std::vector<guidance::TurnLaneType::Mask> turn_lane_masks;
-    if( !util::deserializeAdjacencyArray(
-        config.turn_lane_descriptions_file_name, turn_lane_offsets, turn_lane_masks) )
+    if (!util::deserializeAdjacencyArray(
+            config.turn_lane_descriptions_file_name, turn_lane_offsets, turn_lane_masks))
     {
         util::SimpleLogger().Write(logWARNING) << "Reading Turn Lane Masks failed.";
     }

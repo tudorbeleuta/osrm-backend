@@ -353,6 +353,8 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
 
         double weight = static_cast<double>(mapbox::util::apply_visitor(
             detail::ToValueByEdge(distance), edge_iterator->weight_data));
+        double duration = static_cast<double>(mapbox::util::apply_visitor(
+            detail::ToValueByEdge(distance), edge_iterator->duration_data));
         if (has_segment_function)
         {
             weight = luabind::call_function<double>(segment_state,
@@ -365,6 +367,7 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
 
         auto &edge = edge_iterator->result;
         edge.weight = std::max<EdgeWeight>(1, std::round(weight * 10.));
+        edge.duration = std::max<EdgeWeight>(1, std::round(duration * 10.));
 
         // assign new node id
         auto id_iter = external_to_internal_node_id_map.find(node_iterator->node_id);
@@ -654,8 +657,9 @@ void ExtractionContainers::PrepareRestrictions()
             continue;
         }
 
-        BOOST_ASSERT(way_start_and_end_iterator->way_id ==
-                     OSMWayID{static_cast<std::uint32_t>(restrictions_iterator->restriction.from.way)});
+        BOOST_ASSERT(
+            way_start_and_end_iterator->way_id ==
+            OSMWayID{static_cast<std::uint32_t>(restrictions_iterator->restriction.from.way)});
         // we do not remap the via id yet, since we will need it for the to node as well
         const OSMNodeID via_node_id = OSMNodeID{restrictions_iterator->restriction.via.node};
 
@@ -752,8 +756,9 @@ void ExtractionContainers::PrepareRestrictions()
             ++restrictions_iterator;
             continue;
         }
-        BOOST_ASSERT(way_start_and_end_iterator->way_id ==
-                     OSMWayID{static_cast<std::uint32_t>(restrictions_iterator->restriction.to.way)});
+        BOOST_ASSERT(
+            way_start_and_end_iterator->way_id ==
+            OSMWayID{static_cast<std::uint32_t>(restrictions_iterator->restriction.to.way)});
         const OSMNodeID via_node_id = OSMNodeID{restrictions_iterator->restriction.via.node};
 
         // assign new via node id

@@ -30,7 +30,7 @@ struct ToValueByEdge
 
     ValueByEdge operator()(const ValueByMeter by_meter) const
     {
-        return ValueByEdge(distance / static_cast<double>(by_meter));
+        return ValueByEdge{distance / static_cast<double>(by_meter)};
     }
 
     ValueByEdge operator()(const ValueByEdge by_edge) const { return by_edge; }
@@ -62,13 +62,14 @@ struct InternalExtractorEdge
                                                           MIN_OSM_NODEID,
                                                           0,
                                                           0,
+                                                          0,
+                                                          false,
                                                           false,
                                                           false,
                                                           false,
                                                           false,
                                                           false,
                                                           TRAVEL_MODE_INACCESSIBLE,
-                                                          false,
                                                           INVALID_LANE_DESCRIPTIONID,
                                                           guidance::RoadClassificationData()},
                                      detail::ValueByMeter{0.0},
@@ -81,13 +82,14 @@ struct InternalExtractorEdge
                                                           MAX_OSM_NODEID,
                                                           0,
                                                           0,
+                                                          0,
+                                                          false,
                                                           false,
                                                           false,
                                                           false,
                                                           false,
                                                           false,
                                                           TRAVEL_MODE_INACCESSIBLE,
-                                                          false,
                                                           INVALID_LANE_DESCRIPTIONID,
                                                           guidance::RoadClassificationData()},
                                      detail::ValueByMeter{0.0},

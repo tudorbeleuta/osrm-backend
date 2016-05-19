@@ -8,9 +8,9 @@
 #include "extractor/restriction.hpp"
 #include "extractor/scripting_environment.hpp"
 
+#include <cstdint>
 #include <stxxl/vector>
 #include <unordered_map>
-#include <cstdint>
 
 namespace osrm
 {
@@ -42,9 +42,10 @@ class ExtractionContainers
     void WriteCharData(const std::string &file_name,
                        const stxxl::vector<unsigned> &offests,
                        const stxxl::vector<char> &char_data) const;
-    void WriteTurnLaneMasks(const std::string &file_name,
-                            const stxxl::vector<std::uint32_t> &turn_lane_offsets,
-                            const stxxl::vector<guidance::TurnLaneType::Mask> &turn_lane_masks) const;
+    void
+    WriteTurnLaneMasks(const std::string &file_name,
+                       const stxxl::vector<std::uint32_t> &turn_lane_offsets,
+                       const stxxl::vector<guidance::TurnLaneType::Mask> &turn_lane_masks) const;
 
   public:
     using STXXLNodeIDVector = stxxl::vector<OSMNodeID>;
