@@ -344,7 +344,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         }
         std::size_t start_index = 0, end_index = 0;
         std::vector<unsigned> id_vector;
-        std::vector<EdgeWeight> weight_vector;
+        std::vector<EdgeWeight> duration_vector;
         const bool is_local_path = (phantom_node_pair.source_phantom.forward_packed_geometry_id ==
                                     phantom_node_pair.target_phantom.forward_packed_geometry_id) &&
                                    unpacked_path.empty();
@@ -354,8 +354,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             facade->GetUncompressedGeometry(
                 phantom_node_pair.target_phantom.reverse_packed_geometry_id, id_vector);
 
-            facade->GetUncompressedWeights(
-                phantom_node_pair.target_phantom.reverse_packed_geometry_id, weight_vector);
+            facade->GetUncompressedDurations(
+                phantom_node_pair.target_phantom.reverse_packed_geometry_id, duration_vector);
 
             if (is_local_path)
             {
@@ -375,8 +375,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             facade->GetUncompressedGeometry(
                 phantom_node_pair.target_phantom.forward_packed_geometry_id, id_vector);
 
-            facade->GetUncompressedWeights(
-                phantom_node_pair.target_phantom.forward_packed_geometry_id, weight_vector);
+            facade->GetUncompressedDurations(
+                phantom_node_pair.target_phantom.forward_packed_geometry_id, duration_vector);
         }
 
         // Given the following compressed geometry:
@@ -393,7 +393,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             unpacked_path.push_back(PathData{
                 id_vector[i],
                 phantom_node_pair.target_phantom.name_id,
-                weight_vector[i],
+                duration_vector[i],
                 extractor::guidance::TurnInstruction::NO_TURN(),
                 {{0, INVALID_LANEID}, INVALID_LANE_DESCRIPTIONID},
                 target_traversed_in_reverse ? phantom_node_pair.target_phantom.backward_travel_mode
