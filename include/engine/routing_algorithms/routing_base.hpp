@@ -306,11 +306,10 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
 
                 std::vector<EdgeWeight> weight_vector;
                 facade->GetUncompressedWeights(facade->GetGeometryIndexForEdgeID(ed.id),
-                                                 weight_vector);
+                                               weight_vector);
                 BOOST_ASSERT(weight_vector.size() > 0);
 
-                auto total_weight =
-                    std::accumulate(weight_vector.begin(), weight_vector.end(), 0);
+                auto total_weight = std::accumulate(weight_vector.begin(), weight_vector.end(), 0);
                 auto total_duration =
                     std::accumulate(duration_vector.begin(), duration_vector.end(), 0);
 
@@ -424,6 +423,9 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             const auto source_weight = start_traversed_in_reverse
                                            ? phantom_node_pair.source_phantom.reverse_weight
                                            : phantom_node_pair.source_phantom.forward_weight;
+            const auto source_duration = start_traversed_in_reverse
+                                             ? phantom_node_pair.source_phantom.reverse_duration
+                                             : phantom_node_pair.source_phantom.forward_duration;
             // The above code will create segments for (v, w), (w,x), (x, y) and (y, Z).
             // However the first segment duration needs to be adjusted to the fact that the source
             // phantom is in the middle of the segment. We do this by subtracting v--s from the
