@@ -3,6 +3,7 @@
 #include "extractor/external_memory_node.hpp"
 #include "extractor/extraction_helper_functions.hpp"
 #include "extractor/extraction_node.hpp"
+#include "extractor/extraction_turn.hpp"
 #include "extractor/extraction_way.hpp"
 #include "extractor/internal_extractor_edge.hpp"
 #include "extractor/profile_properties.hpp"
@@ -104,9 +105,6 @@ void ScriptingEnvironment::InitContext(ScriptingEnvironment::Context &context)
              .property("traffic_signal_penalty",
                        &ProfileProperties::GetTrafficSignalPenalty,
                        &ProfileProperties::SetTrafficSignalPenalty)
-             .property("u_turn_penalty",
-                       &ProfileProperties::GetUturnPenalty,
-                       &ProfileProperties::SetUturnPenalty)
              .property("weight_name",
                        &ProfileProperties::GetWeightName,
                        &ProfileProperties::SetWeightName)
@@ -171,6 +169,10 @@ void ScriptingEnvironment::InitContext(ScriptingEnvironment::Context &context)
          luabind::class_<util::Coordinate>("Coordinate")
              .property("lon", &lonToDouble<util::Coordinate>)
              .property("lat", &latToDouble<util::Coordinate>),
+         luabind::class_<ExtractionTurn>("Turn")
+             .def_readonly("angle", &ExtractionTurn::angle)
+             .def_readwrite("duration", &ExtractionTurn::duration)
+             .def_readwrite("weight", &ExtractionTurn::weight),
          luabind::class_<RasterDatum>("RasterDatum")
              .def_readonly("datum", &RasterDatum::datum)
              .def("invalid_data", &RasterDatum::get_invalid)];
