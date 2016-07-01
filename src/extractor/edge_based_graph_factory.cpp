@@ -9,6 +9,7 @@
 #include "util/simple_logger.hpp"
 #include "util/timing_util.hpp"
 
+#include "extractor/io.hpp"
 #include "extractor/guidance/toolkit.hpp"
 #include "extractor/guidance/turn_analysis.hpp"
 #include "extractor/guidance/turn_lane_handler.hpp"
@@ -505,7 +506,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     const unsigned node_count = node_based_edges.size() + 1;
                     const QueryNode &first_node = m_node_info_list[previous];
 
-                    lookup::SegmentHeaderBlock header = {node_count, first_node.node_id};
+                    io::SegmentHeaderBlock header = {node_count, first_node.node_id};
 
                     edge_segment_file.write(reinterpret_cast<const char *>(&header),
                                             sizeof(header));
@@ -517,7 +518,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                         const double segment_length =
                             util::coordinate_calculation::greatCircleDistance(from, to);
 
-                        lookup::SegmentBlock nodeblock = {
+                        io::SegmentBlock nodeblock = {
                             to.node_id, segment_length, target_node.weight};
 
                         edge_segment_file.write(reinterpret_cast<const char *>(&nodeblock),
@@ -548,7 +549,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                         m_node_info_list[m_compressed_edge_container.GetFirstEdgeTargetID(
                             turn.eid)];
 
-                    lookup::TurnIndexBlock turn_index_block = {
+                    io::TurnIndexBlock turn_index_block = {
                         from_node.node_id, via_node.node_id, to_node.node_id};
                     BOOST_ASSERT(turn_penaltie_index_file.tellp() / (sizeof(turn_index_block)) ==
                                  turn_id);
