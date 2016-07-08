@@ -1,3 +1,7 @@
+# 5.4.0
+    - Guidance
+      - Handle Access tags for lanes, only considering valid lanes in lane-guidance (think car | car | bike | car)
+
 # 5.3.0 RC3
   Changes from 5.3.0-rc.2
     - Guidance

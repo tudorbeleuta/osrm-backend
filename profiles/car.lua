@@ -195,6 +195,17 @@ local function getPSVCounts(way)
     return fw, bw
 end
 
+local function processLanes(turn_lane,vehicle_lane,first_count,second_count)
+    if turn_lane and turn_lane ~= "" then
+        if vehicle_lane and vehicle_lane ~= "" then
+            turn_lane = applyAccessTokens(turn_lane,vehicle_lane)
+        elseif fw_count ~= 0 or bw_count ~= 0 then
+            turn_lane = trimLaneString(turn_lane, first_count, second_count)
+        end
+    end
+    return turn_lane;
+end
+
 -- this is broken for left-sided driving. It needs to switch left and right in case of left-sided driving
 local function getTurnLanes(way)
     local fw_psv = 0
@@ -205,19 +216,14 @@ local function getTurnLanes(way)
     local turn_lanes_fw = way:get_value_by_key("turn:lanes:forward")
     local turn_lanes_bw = way:get_value_by_key("turn:lanes:backward")
 
-    if( fw_psv ~= 0 or bw_psv ~= 0 ) then
-        if  turn_lanes and turn_lanes ~= "" then
-            turn_lanes = trimLaneString(turn_lanes, bw_psv, fw_psv )
-        end
-        if  turn_lanes_fw and turn_lanes_fw ~= ""  then
-            turn_lanes_fw = trimLaneString(turn_lanes_fw, bw_psv, fw_psv )
-        end
-        --backwards turn lanes need to treat bw_psv as fw_psv and vice versa
-        if  turn_lanes_bw and turn_lanes_bw ~= ""  then
-            turn_lanes_bw = trimLaneString(turn_lanes_bw, fw_psv, bw_psv )
-        end
-    end
+    local vehicle_lanes = way:get_value_by_key("vehicle:lanes");
+    local vehicle_lanes_fw = way:get_value_by_key("vehicle:lanes:forward");
+    local vehicle_lanes_bw = way:get_value_by_key("vehicle:lanes:backward");
 
+    turn_lanes = processLanes(turn_lanes,vehicle_lanes,bw_psv,fw_psv)
+    turn_lanes_fw = processLanes(turn_lanes_fw,vehicle_lanes_fw,bw_psv,fw_psv)
+    --backwards turn lanes need to treat bw_psv as fw_psv and vice versa
+    turn_lanes_bw = processLanes(turn_lanes_bw,vehicle_lanes_bw,fw_psv,bw_psv)
     return turn_lanes, turn_lanes_fw, turn_lanes_bw
 end
 

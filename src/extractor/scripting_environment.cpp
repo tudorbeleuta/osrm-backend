@@ -78,6 +78,7 @@ void ScriptingEnvironment::InitContext(ScriptingEnvironment::Context &context)
         [luabind::def("durationIsValid", durationIsValid),
          luabind::def("parseDuration", parseDuration),
          luabind::def("trimLaneString", trimLaneString),
+         luabind::def("applyAccessTokens", applyAccessTokens),
          luabind::class_<TravelMode>("mode").enum_(
              "enums")[luabind::value("inaccessible", TRAVEL_MODE_INACCESSIBLE),
                       luabind::value("driving", TRAVEL_MODE_DRIVING),
