@@ -681,9 +681,9 @@ Feature: Turn Lane Guidance
             | ab    | on   | motorway_link |                    |
 
         When I route I should get
-            | waypoints | route             | turns                                             | lanes                           |
-            | a,j       | on,xbcj,xbcj,xbcj | depart,merge slight left,use lane straight,arrive | ,,none:true slight right:false, |
-            | a,i       | on,xbcj,off,off   | depart,merge slight left,turn slight right,arrive | ,,none:false slight right:true, |
+            | waypoints | route        | turns                           | lanes                          |
+            | a,j       | on,xbcj,xbcj | depart,use lane straight,arrive | ,none:true slight right:false, |
+            | a,i       | on,off,off   | depart,turn slight right,arrive | ,none:false slight right:true, |
 
     #http://www.openstreetmap.org/#map=17/52.47414/13.35712
     @todo @ramp @2645

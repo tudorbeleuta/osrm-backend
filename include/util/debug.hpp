@@ -6,6 +6,7 @@
 #include "extractor/query_node.hpp"
 #include "engine/guidance/route_step.hpp"
 #include "util/typedefs.hpp"
+#include "util/node_based_graph.hpp"
 
 #include <iomanip>
 #include <iostream>
@@ -62,6 +63,16 @@ inline void print( const extractor::guidance::Intersection & intersection )
     std::cout << std::flush;
 }
 
+inline void print( const NodeBasedDynamicGraph &node_based_graph, const extractor::guidance::Intersection & intersection )
+{
+    std::cout << "  Intersection:\n";
+    for (const auto &road : intersection)
+    {
+        std::cout << "\t" << toString(road) << "\n";
+        std::cout << "\t\t" << node_based_graph.GetEdgeData(road.turn.eid).road_classification.ToString() << "\n";
+    }
+    std::cout << std::flush;
+}
 
 inline void print(const extractor::guidance::lanes::LaneDataVector &turn_lane_data)
 {

@@ -1,6 +1,8 @@
 # 5.4.0
     - Profiles
       - includes library guidance.lua that offers preliminary configuration on guidance.
+    - Guidance
+      - Reduced semantic of merge to refer only to merges from a lane onto a motorway-like road
 
 # 5.3.0 RC3
   Changes from 5.3.0-rc.2
