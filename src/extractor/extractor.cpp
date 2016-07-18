@@ -541,7 +541,8 @@ Extractor::BuildEdgeExpandedGraph(lua_State *lua_state,
                                  config.turn_lane_data_file_name,
                                  lua_state,
                                  config.edge_segment_lookup_path,
-                                 config.turn_penalties_path,
+                                 config.turn_weight_penalties_path,
+                                 config.turn_duration_penalties_path,
                                  config.turn_penalties_index_path,
                                  config.generate_edge_lookup);
 

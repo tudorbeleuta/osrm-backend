@@ -10,7 +10,9 @@ namespace extractor
 {
 namespace io
 {
-// Set to 1 byte alignment
+/**
+ * All these structs are set to 1 byte alignment to get compact on-disk storage
+ */
 struct SegmentHeaderBlock
 {
     std::uint32_t num_osm_nodes;
@@ -29,6 +31,14 @@ struct SegmentBlock
 } __attribute((packed));
 static_assert(std::is_trivial<SegmentBlock>::value, "SegmentBlock is not trivial");
 static_assert(sizeof(SegmentBlock) == 20, "SegmentBlock is not packed correctly");
+
+struct TurnPenaltiesHeader
+{
+    //! the number of penalties in each block
+    std::uint64_t number_of_penalties;
+} __attribute((packed));
+static_assert(std::is_trivial<TurnPenaltiesHeader>::value, "TurnPenaltiesHeader is not trivial");
+static_assert(sizeof(TurnPenaltiesHeader) == 8, "TurnPenaltiesHeader is not packed correctly");
 
 struct TurnIndexBlock
 {

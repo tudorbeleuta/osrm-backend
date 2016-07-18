@@ -71,7 +71,8 @@ class EdgeBasedGraphFactory
              const std::string &turn_lane_data_filename,
              lua_State *lua_state,
              const std::string &edge_segment_lookup_filename,
-             const std::string &turn_penalties_filename,
+             const std::string &turn_weight_penalties_filename,
+             const std::string &turn_duration_penalties_filename,
              const std::string &turn_penalties_index_filename,
              const bool generate_edge_lookup);
 
@@ -139,7 +140,8 @@ class EdgeBasedGraphFactory
                                    const std::string &turn_lane_data_filename,
                                    lua_State *lua_state,
                                    const std::string &edge_segment_lookup_filename,
-                                   const std::string &edge_fixed_penalties_filename,
+                                   const std::string &turn_weight_penalties_filename,
+                                   const std::string &turn_duration_penalties_filename,
                                    const std::string &turn_penalties_index_filename,
                                    const bool generate_edge_lookup);
 

@@ -171,8 +171,8 @@ void ScriptingEnvironment::InitContext(ScriptingEnvironment::Context &context)
              .property("lat", &latToDouble<util::Coordinate>),
          luabind::class_<ExtractionTurn>("Turn")
              .def_readonly("angle", &ExtractionTurn::angle)
-             .def_readwrite("duration", &ExtractionTurn::duration)
-             .def_readwrite("weight", &ExtractionTurn::weight),
+             .property("duration", &ExtractionTurn::GetDuration, &ExtractionTurn::SetDuration)
+             .property("weight", &ExtractionTurn::GetWeight, &ExtractionTurn::SetWeight),
          luabind::class_<RasterDatum>("RasterDatum")
              .def_readonly("datum", &RasterDatum::datum)
              .def("invalid_data", &RasterDatum::get_invalid)];
