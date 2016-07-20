@@ -17,7 +17,10 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                                const std::unordered_set<NodeID> &traffic_lights,
                                RestrictionMap &restriction_map,
                                util::NodeBasedDynamicGraph &graph,
-                               CompressedEdgeContainer &geometry_compressor)
+                               CompressedEdgeContainer &geometry_compressor,
+
+                               // DELETE
+                                const std::vector<QueryNode> &node_info_list)
 {
     const unsigned original_number_of_nodes = graph.GetNumberOfNodes();
     const unsigned original_number_of_edges = graph.GetNumberOfEdges();
@@ -184,11 +187,15 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
             restriction_map.FixupStartingTurnRestriction(node_w, node_v, node_u);
             restriction_map.FixupArrivingTurnRestriction(node_w, node_v, node_u, graph);
 
+            util::SimpleLogger().Write() << "REVERSE: " << reverse_edge_order;
+
             // store compressed geometry in container
-            geometry_compressor.CompressEdge(
-                forward_e1, forward_e2, node_v, node_w, forward_weight1, forward_weight2);
-            geometry_compressor.CompressEdge(
-                reverse_e1, reverse_e2, node_v, node_u, reverse_weight1, reverse_weight2);
+            geometry_compressor.CompressEdge(forward_e1, forward_e2, reverse_e1, reverse_e2,
+                node_u, node_v, node_w, forward_weight1, forward_weight2, reverse_weight1,
+                reverse_weight2,
+
+                // DELETE
+                node_info_list);
         }
     }
 

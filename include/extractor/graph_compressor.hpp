@@ -3,6 +3,10 @@
 
 #include "util/typedefs.hpp"
 
+// DELETE
+#include "extractor/query_node.hpp"
+
+
 #include "util/node_based_graph.hpp"
 
 #include <memory>
@@ -25,7 +29,10 @@ class GraphCompressor
                   const std::unordered_set<NodeID> &traffic_lights,
                   RestrictionMap &restriction_map,
                   util::NodeBasedDynamicGraph &graph,
-                  CompressedEdgeContainer &geometry_compressor);
+                  CompressedEdgeContainer &geometry_compressor,
+
+                  // DELETE
+                  const std::vector<QueryNode> &node_info_list);
 
   private:
     void PrintStatistics(unsigned original_number_of_nodes,

@@ -499,7 +499,10 @@ Extractor::BuildEdgeExpandedGraph(lua_State *lua_state,
                               traffic_lights,
                               *restriction_map,
                               *node_based_graph,
-                              compressed_edge_container);
+                              compressed_edge_container,
+
+                              // DELETE
+                              internal_to_external_node_map);
 
     compressed_edge_container.SerializeInternalVector(config.geometry_output_path);
 

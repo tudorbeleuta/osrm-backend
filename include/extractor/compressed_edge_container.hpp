@@ -3,8 +3,11 @@
 
 #include "util/typedefs.hpp"
 
-#include <unordered_map>
+// DELETE
+#include "extractor/query_node.hpp"
 
+
+#include <unordered_map>
 #include <string>
 #include <vector>
 
@@ -20,17 +23,27 @@ class CompressedEdgeContainer
     {
       public:
         NodeID node_id;    // refers to an internal node-based-node
-        EdgeWeight weight; // the weight of the edge leading to this node
+        EdgeWeight forward_weight;
+        EdgeWeight reverse_weight;
     };
     using EdgeBucket = std::vector<CompressedEdge>;
 
     CompressedEdgeContainer();
-    void CompressEdge(const EdgeID surviving_edge_id,
-                      const EdgeID removed_edge_id,
-                      const NodeID via_node_id,
-                      const NodeID target_node,
-                      const EdgeWeight weight1,
-                      const EdgeWeight weight2);
+
+    void CompressEdge(const EdgeID f_edge_id_1,
+                      const EdgeID f_edge_id_2,
+                      const EdgeID r_edge_id_1,
+                      const EdgeID r_edge_id_2,
+                      const NodeID node_u,
+                      const NodeID node_v,
+                      const NodeID node_w,
+                      const EdgeWeight f_weight1,
+                      const EdgeWeight f_weight2,
+                      const EdgeWeight r_weight1,
+                      const EdgeWeight r_weight2,
+
+                      // DELETE
+                      const std::vector<QueryNode> &node_info_list);
 
     void
     AddUncompressedEdge(const EdgeID edgei_id, const NodeID target_node, const EdgeWeight weight);

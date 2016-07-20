@@ -7,6 +7,7 @@
 
 #include <limits>
 #include <string>
+#include <numeric>
 
 #include <iostream>
 
@@ -94,87 +95,158 @@ void CompressedEdgeContainer::SerializeInternalVector(const std::string &path) c
 //     edge_id_1               edge_id_2
 //   ----------> via_node_id -----------> target_node_id
 //     weight_1                weight_2
-void CompressedEdgeContainer::CompressEdge(const EdgeID edge_id_1,
-                                           const EdgeID edge_id_2,
-                                           const NodeID via_node_id,
-                                           const NodeID target_node_id,
-                                           const EdgeWeight weight1,
-                                           const EdgeWeight weight2)
+// TODO TODO Update comment
+void CompressedEdgeContainer::CompressEdge(const EdgeID f_edge_id_1,
+                                           const EdgeID f_edge_id_2,
+                                           const EdgeID r_edge_id_1,
+                                           const EdgeID r_edge_id_2,
+                                           const NodeID node_u,
+                                           const NodeID node_v,
+                                           const NodeID node_w,
+                                           const EdgeWeight f_weight1,
+                                           const EdgeWeight f_weight2,
+                                           const EdgeWeight r_weight1,
+                                           const EdgeWeight r_weight2,
+
+                                           // DELETE
+                                           const std::vector<QueryNode> &node_info_list)
 {
+    util::SimpleLogger().Write() << "uvw: ";
+    util::SimpleLogger().Write() << "     " << node_u << " " << node_info_list[node_u].node_id;
+    util::SimpleLogger().Write() << "     " << node_v << " " << node_info_list[node_v].node_id;
+    util::SimpleLogger().Write() << "     " << node_w << " " << node_info_list[node_w].node_id;
+
     // remove super-trivial geometries
-    BOOST_ASSERT(SPECIAL_EDGEID != edge_id_1);
-    BOOST_ASSERT(SPECIAL_EDGEID != edge_id_2);
-    BOOST_ASSERT(SPECIAL_NODEID != via_node_id);
-    BOOST_ASSERT(SPECIAL_NODEID != target_node_id);
-    BOOST_ASSERT(INVALID_EDGE_WEIGHT != weight1);
-    BOOST_ASSERT(INVALID_EDGE_WEIGHT != weight2);
+    BOOST_ASSERT(SPECIAL_EDGEID != f_edge_id_1);
+    BOOST_ASSERT(SPECIAL_EDGEID != f_edge_id_2);
+    BOOST_ASSERT(SPECIAL_EDGEID != r_edge_id_1);
+    BOOST_ASSERT(SPECIAL_EDGEID != r_edge_id_2);
+    BOOST_ASSERT(SPECIAL_NODEID != node_u);
+    BOOST_ASSERT(SPECIAL_NODEID != node_v);
+    BOOST_ASSERT(SPECIAL_NODEID != node_w);
+    BOOST_ASSERT(INVALID_EDGE_WEIGHT != f_weight1);
+    BOOST_ASSERT(INVALID_EDGE_WEIGHT != f_weight2);
+    BOOST_ASSERT(INVALID_EDGE_WEIGHT != r_weight1);
+    BOOST_ASSERT(INVALID_EDGE_WEIGHT != r_weight2);
 
-    // append list of removed edge_id plus via node to surviving edge id:
-    // <surv_1, .. , surv_n, via_node_id, rem_1, .. rem_n
-    //
-    // General scheme:
-    // 1. append via node id to list of edge_id_1
-    // 2. find list for edge_id_2, if yes add all elements and delete it
+    bool left_exists = HasEntryForID(f_edge_id_1);
+    bool right_exists = HasEntryForID(f_edge_id_2);
 
-    // Add via node id. List is created if it does not exist
-    if (!HasEntryForID(edge_id_1))
+    BOOST_ASSERT(left_exists == HasEntryForID(r_edge_id_2));
+    BOOST_ASSERT(right_exists == HasEntryForID(r_edge_id_1));
+
+    unsigned edge_bucket_index;
+
+    if (!left_exists)
     {
-        // create a new entry in the map
+        // create a new bucket
         if (0 == m_free_list.size())
         {
             // make sure there is a place to put the entries
             IncreaseFreeList();
         }
         BOOST_ASSERT(!m_free_list.empty());
-        m_edge_id_to_list_index_map[edge_id_1] = m_free_list.back();
+        edge_bucket_index = m_free_list.back();
+        m_edge_id_to_list_index_map[f_edge_id_1] = edge_bucket_index;
         m_free_list.pop_back();
+
+        BOOST_ASSERT(edge_bucket_index == GetPositionForID(f_edge_id_1));
     }
-
-    // find bucket index
-    const auto iter = m_edge_id_to_list_index_map.find(edge_id_1);
-    BOOST_ASSERT(iter != m_edge_id_to_list_index_map.end());
-    const unsigned edge_bucket_id1 = iter->second;
-    BOOST_ASSERT(edge_bucket_id1 == GetPositionForID(edge_id_1));
-    BOOST_ASSERT(edge_bucket_id1 < m_compressed_geometries.size());
-
-    std::vector<CompressedEdge> &edge_bucket_list1 = m_compressed_geometries[edge_bucket_id1];
-
-    // note we don't save the start coordinate: it is implicitly given by edge 1
-    // weight1 is the distance to the (currently) last coordinate in the bucket
-    if (edge_bucket_list1.empty())
+    else
     {
-        edge_bucket_list1.emplace_back(CompressedEdge{via_node_id, weight1});
+        edge_bucket_index = GetPositionForID(f_edge_id_1);
+
+        // since we'll be appending to the end of this list, r_edge_id_2 will now be the middle
+        // of an edge, not necessary to track in the index map
+        BOOST_ASSERT(m_edge_id_to_list_index_map[r_edge_id_2] == edge_bucket_index);
+        m_edge_id_to_list_index_map.erase(r_edge_id_2);
     }
 
-    BOOST_ASSERT(0 < edge_bucket_list1.size());
-    BOOST_ASSERT(!edge_bucket_list1.empty());
+    BOOST_ASSERT(edge_bucket_index < m_compressed_geometries.size());
 
-    if (HasEntryForID(edge_id_2))
+    std::vector<CompressedEdge> &edge_bucket_list = m_compressed_geometries[edge_bucket_index];
+
+    if (edge_bucket_list.empty())
+    {
+        // Add both the left and middle nodes
+        edge_bucket_list.emplace_back(CompressedEdge{node_u, INVALID_EDGE_WEIGHT, r_weight2});
+        edge_bucket_list.emplace_back(CompressedEdge{node_v, f_weight1, r_weight1});
+    }
+    else
+    {
+        // Both left and middle nodes should already exist, but the middle node, which
+        // was previously an end node, now gets a reverse weight
+        BOOST_ASSERT(edge_bucket_list.front().node_id == node_u);
+        BOOST_ASSERT(edge_bucket_list.back().node_id == node_v);
+        BOOST_ASSERT(edge_bucket_list.front().forward_weight == INVALID_EDGE_WEIGHT);
+        BOOST_ASSERT(edge_bucket_list.back().reverse_weight == INVALID_EDGE_WEIGHT);
+
+        // This may or may not be the correct weight, depending on whether the second
+        // edge is atomic, but we address that below
+        edge_bucket_list.back().reverse_weight = r_weight1;
+    }
+
+    BOOST_ASSERT(1 < edge_bucket_list.size());
+    BOOST_ASSERT(!edge_bucket_list.empty());
+
+    if (right_exists)
     {
         // second edge is not atomic anymore
-        const unsigned list_to_remove_index = GetPositionForID(edge_id_2);
+        const unsigned list_to_remove_index = GetPositionForID(f_edge_id_2);
+        BOOST_ASSERT(list_to_remove_index == GetPositionForID(r_edge_id_1));
         BOOST_ASSERT(list_to_remove_index < m_compressed_geometries.size());
 
-        std::vector<CompressedEdge> &edge_bucket_list2 =
+        std::vector<CompressedEdge> &edge_bucket_list_to_remove =
             m_compressed_geometries[list_to_remove_index];
 
-        // found an existing list, append it to the list of edge_id_1
-        edge_bucket_list1.insert(
-            edge_bucket_list1.end(), edge_bucket_list2.begin(), edge_bucket_list2.end());
+        // util::SimpleLogger().Write() << "nodes we think match: " << edge_bucket_list.back().node_id << " " <<
+        //     edge_bucket_list_to_remove.front().node_id << " " <<
+        //     node_info_list[edge_bucket_list.back().node_id].node_id << " " <<
+        //     node_info_list[edge_bucket_list_to_remove.front().node_id].node_id;
 
-        // remove the list of edge_id_2
-        m_edge_id_to_list_index_map.erase(edge_id_2);
+        // util::SimpleLogger().Write() << "first vec nodes: ";
+        // for (const auto &n : edge_bucket_list)
+        // {
+        //     util::SimpleLogger().Write() << "    " << n.node_id << " " << node_info_list[n.node_id].node_id;
+        // }
+        // util::SimpleLogger().Write() << "second vec nodes: ";
+        // for (const auto &n : edge_bucket_list_to_remove)
+        // {
+        //     util::SimpleLogger().Write() << "    " << n.node_id << " " << node_info_list[n.node_id].node_id;
+        // }
+
+        BOOST_ASSERT(edge_bucket_list.back().node_id == edge_bucket_list_to_remove.front().node_id);
+        BOOST_ASSERT(edge_bucket_list_to_remove.front().forward_weight == INVALID_EDGE_WEIGHT);
+        BOOST_ASSERT(r_weight1 == std::accumulate(edge_bucket_list_to_remove.begin(),
+                                                  edge_bucket_list_to_remove.end() - 1, 0,
+                                                  [](const EdgeWeight& a, CompressedEdge b) {
+                                                     return a + b.reverse_weight;
+                                                  }));
+
+        // Here is where we address the incorrect reverse weight mentioned above
+        edge_bucket_list.back().reverse_weight = edge_bucket_list_to_remove.front().reverse_weight;
+
+        // move this existing list to the end of the first. Note since we now store beginning
+        // nodes, we skip the first node in the second list as it is a dupe
+        edge_bucket_list.insert(edge_bucket_list.end(), edge_bucket_list_to_remove.begin() + 1,
+            edge_bucket_list_to_remove.end());
+
+        // remove the list of f_edge_id_2/r_edge_id_1 and update the index map
+        m_edge_id_to_list_index_map.erase(f_edge_id_2);
         BOOST_ASSERT(m_edge_id_to_list_index_map.end() ==
-                     m_edge_id_to_list_index_map.find(edge_id_2));
-        edge_bucket_list2.clear();
-        BOOST_ASSERT(0 == edge_bucket_list2.size());
+                     m_edge_id_to_list_index_map.find(f_edge_id_2));
+        m_edge_id_to_list_index_map[r_edge_id_1] = edge_bucket_index;
+        BOOST_ASSERT(GetPositionForID(r_edge_id_1) == GetPositionForID(f_edge_id_1));
+        edge_bucket_list_to_remove.clear();
+        BOOST_ASSERT(0 == edge_bucket_list_to_remove.size());
         m_free_list.emplace_back(list_to_remove_index);
         BOOST_ASSERT(list_to_remove_index == m_free_list.back());
     }
     else
     {
-        // we are certain that the second edge is atomic.
-        edge_bucket_list1.emplace_back(CompressedEdge{target_node_id, weight2});
+        // we are certain that the second edge is atomic
+        edge_bucket_list.emplace_back(CompressedEdge{node_w, f_weight2, INVALID_EDGE_WEIGHT});
+        m_edge_id_to_list_index_map[r_edge_id_1] = edge_bucket_index;
     }
 }
 
@@ -210,11 +282,13 @@ void CompressedEdgeContainer::AddUncompressedEdge(const EdgeID edge_id,
 
     std::vector<CompressedEdge> &edge_bucket_list = m_compressed_geometries[edge_bucket_id];
 
+    // TODO HERE
     // note we don't save the start coordinate: it is implicitly given by edge_id
     // weight is the distance to the (currently) last coordinate in the bucket
     // Don't re-add this if it's already in there.
     if (edge_bucket_list.empty())
     {
+        // TODO HERE
         edge_bucket_list.emplace_back(CompressedEdge{target_node_id, weight});
     }
 }
@@ -247,6 +321,7 @@ const CompressedEdgeContainer::EdgeBucket &
 CompressedEdgeContainer::GetBucketReference(const EdgeID edge_id) const
 {
     const unsigned index = m_edge_id_to_list_index_map.at(edge_id);
+    util::SimpleLogger().Write() << "eid/bucket index: " << edge_id << " " << index;
     return m_compressed_geometries.at(index);
 }
 
