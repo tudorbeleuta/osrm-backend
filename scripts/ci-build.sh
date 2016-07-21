@@ -1,22 +1,19 @@
 #!/usr/bin/env bash
 
-set -eux
+set -eu
 set -o pipefail
 
-INSTALL_PREFIX=$1
-
-if [[ ${INSTALL_PREFIX:-false} == false ]]; then
+if [[ ${1:-false} == false ]]; then
     echo "please provide install prefix as first arg"
     exit 1
 fi
+
+INSTALL_PREFIX=$1
 
 export CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # ensure we start inside the osrm-backend directory (one level up)
 cd ${CURRENT_DIR}/../
-
-# we pin the mason version to avoid changes in mason breaking builds
-MASON_VERSION="b709931"
 
 if [[ `which pkg-config` ]]; then
     echo "Success: Found pkg-config";
@@ -25,67 +22,17 @@ else
     exit 1;
 fi;
 
-if [[ `which node` ]]; then
-    echo "Success: Found node";
-else
-    echo "echo you need node installed";
-    exit 1;
-fi;
 
-function dep() {
-    ./.mason/mason install $1 $2
-    ./.mason/mason link $1 $2
-}
-
-function all_deps() {
-    dep clang 3.8.0 &
-    dep cmake 3.2.2 &
-    dep lua 5.3.0 &
-    dep luabind e414c57bcb687bb3091b7c55bbff6947f052e46b &
-    dep boost 1.61.0 &
-    dep boost_libatomic 1.61.0 &
-    dep boost_libchrono 1.61.0 &
-    dep boost_libsystem 1.61.0 &
-    dep boost_libthread 1.61.0 &
-    dep boost_libfilesystem 1.61.0 &
-    dep boost_libprogram_options 1.61.0 &
-    dep boost_libregex 1.61.0 &
-    dep boost_libiostreams 1.61.0 &
-    dep boost_libtest 1.61.0 &
-    dep boost_libdate_time 1.61.0 &
-    dep expat 2.1.1 &
-    dep stxxl 1.4.1 &
-    dep bzip2 1.0.6 &
-    dep zlib system &
-    dep tbb 43_20150316 &
-    wait
-}
-
-function setup_mason() {
-    if [[ ! -d ./.mason ]]; then
-        git clone https://github.com/mapbox/mason.git ./.mason
-        (cd ./.mason && git checkout ${MASON_VERSION})
-    else
-        echo "Updating to latest mason"
-        (cd ./.mason && git fetch && git checkout ${MASON_VERSION})
-    fi
-    export MASON_HOME=$(pwd)/mason_packages/.link
-    export PATH=$(pwd)/.mason:$PATH
-    export CXX=${CXX:-clang++}
-    export CC=${CC:-clang}
-}
-
+MASON_HOME=$(pwd)/mason_packages/.link
 
 function main() {
     if [[ -d build ]]; then
         echo "$(pwd)/build already exists, please delete before re-running"
         exit 1
     fi
-    setup_mason
-    all_deps
-    set +eu
-    source scripts/install_node.sh 4
-    set -eu
+    # setup mason and deps
+    ./bootstrap.sh
+    source ./scripts/install_node.sh 4
     # put mason installed ccache on PATH
     # then osrm-backend will pick it up automatically
     export CCACHE_VERSION="3.2.4"
@@ -93,7 +40,8 @@ function main() {
     export PATH=$(./.mason/mason prefix ccache ${CCACHE_VERSION})/bin:${PATH}
     # put mason installed clang 3.8.0 on PATH
     export PATH=$(./.mason/mason prefix clang 3.8.0)/bin:${PATH}
-    which clang++ || true
+    export CC=clang-3.8
+    export CXX=clang++-3.8
     CMAKE_EXTRA_ARGS=""
     if [[ ${AR:-false} != false ]]; then
         CMAKE_EXTRA_ARGS="${CMAKE_EXTRA_ARGS} -DCMAKE_AR=${AR}"
