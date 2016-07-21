@@ -81,7 +81,7 @@ function main() {
     cd ../
     mkdir -p example/build
     cd example/build
-    ${MASON_HOME}/bin/cmake ../ -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DLibOSRM_LIBRARIES=${INSTALL_PREFIX}/lib/libosrm.a
+    ${CMAKE_PATH}/cmake ../ -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
     make
     cd ../../
     cp ${MASON_HOME}/lib/libtbb* ./build/
