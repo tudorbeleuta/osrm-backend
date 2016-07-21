@@ -8,7 +8,7 @@ if [[ ${1:-false} == false ]]; then
     exit 1
 fi
 
-INSTALL_PREFIX=$1
+INSTALL_PREFIX=$(realpath $1)
 
 export CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
@@ -22,7 +22,6 @@ else
     exit 1;
 fi;
 
-
 MASON_HOME=$(pwd)/mason_packages/.link
 
 function main() {
@@ -33,6 +32,7 @@ function main() {
     # setup mason and deps
     ./bootstrap.sh
     source ./scripts/install_node.sh 4
+    npm install
     # put mason installed ccache on PATH
     # then osrm-backend will pick it up automatically
     export CCACHE_VERSION="3.2.4"
@@ -78,7 +78,35 @@ function main() {
     ${MASON_HOME}/bin/cmake ../ -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
     make
     cd ../../
+    cp ${MASON_HOME}/lib/libtbb* ./build/
+    if [[ $(uname -s) == 'Darwin' ]]; then
+        for tool in $(ls build/osrm-*); do
+          install_name_tool -change libtbb.dylib @loader_path/libtbb.dylib ${tool}
+          install_name_tool -change libtbbmalloc.dylib @loader_path/libtbbmalloc.dylib ${tool}
+        done
+
+        for tool in $(ls build/libosrm*.dylib); do
+          install_name_tool -change libtbb.dylib @loader_path/libtbb.dylib ${tool}
+          install_name_tool -change libtbbmalloc.dylib @loader_path/libtbbmalloc.dylib ${tool}
+        done
+
+        for tool in $(ls build/unit_tests/*-tests); do
+          install_name_tool -change libtbb.dylib @loader_path/../libtbb.dylib ${tool}
+          install_name_tool -change libtbbmalloc.dylib @loader_path/../libtbbmalloc.dylib ${tool}
+        done
+
+        if [[ -f build/libosrm.dylib ]]; then
+          install_name_tool -change libtbb.dylib @loader_path/libtbb.dylib build/libosrm.dylib
+          install_name_tool -change libtbbmalloc.dylib @loader_path/libtbbmalloc.dylib build/libosrm.dylib
+        fi
+    fi
+    make -C test/data clean || true
     make -C test/data benchmark
+    if [[ $(uname -s) == 'Darwin' ]]; then
+        install_name_tool -change libosrm.dylib @loader_path/../../build/libosrm.dylib example/build/osrm-example
+        install_name_tool -change libtbb.dylib @loader_path/../../build/libtbb.dylib example/build/osrm-example
+        install_name_tool -change libtbbmalloc.dylib @loader_path/../../build/libtbbmalloc.dylib example/build/osrm-example
+    fi
     ./example/build/osrm-example test/data/monaco.osrm
     cd build
     ./unit_tests/library-tests ../test/data/monaco.osrm
@@ -87,6 +115,7 @@ function main() {
     ./unit_tests/util-tests
     ./unit_tests/server-tests
     cd ../
+    echo Y | ./build/osrm-springclean
     npm test
 }
 
