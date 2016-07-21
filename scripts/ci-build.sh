@@ -22,7 +22,21 @@ else
     exit 1;
 fi;
 
-MASON_HOME=$(pwd)/mason_packages/.link
+export MASON_HOME=$(pwd)/mason_packages/.link
+
+function install_build_deps() {
+    export CCACHE_VERSION="3.2.4"
+    export CMAKE_VERSION="3.5.2"
+    export CLANG_VERSION="3.8.0"
+    ./.mason/mason install ccache ${CCACHE_VERSION}
+    ./.mason/mason install cmake ${CMAKE_VERSION}
+    ./.mason/mason install clang ${CLANG_VERSION}
+    export PATH=$(./.mason/mason prefix ccache ${CCACHE_VERSION})/bin:${PATH}
+    export PATH=$(./.mason/mason prefix cmake ${CMAKE_VERSION})/bin:${PATH}
+    export PATH=$(./.mason/mason prefix clang ${CLANG_VERSION})/bin:${PATH}
+    export CC=clang-3.8
+    export CXX=clang++-3.8
+}
 
 function main() {
     if [[ -d build ]]; then
@@ -33,24 +47,16 @@ function main() {
     ./bootstrap.sh
     source ./scripts/install_node.sh 4
     npm install
-    # put mason installed ccache on PATH
-    # then osrm-backend will pick it up automatically
-    export CCACHE_VERSION="3.2.4"
-    ./.mason/mason install ccache ${CCACHE_VERSION}
-    export PATH=$(./.mason/mason prefix ccache ${CCACHE_VERSION})/bin:${PATH}
-    # put mason installed clang 3.8.0 on PATH
-    export PATH=$(./.mason/mason prefix clang 3.8.0)/bin:${PATH}
-    export CC=clang-3.8
-    export CXX=clang++-3.8
-    CMAKE_EXTRA_ARGS=""
+    install_build_deps
+    export CMAKE_EXTRA_ARGS=""
     if [[ ${AR:-false} != false ]]; then
-        CMAKE_EXTRA_ARGS="${CMAKE_EXTRA_ARGS} -DCMAKE_AR=${AR}"
+        export CMAKE_EXTRA_ARGS="${CMAKE_EXTRA_ARGS} -DCMAKE_AR=${AR}"
     fi
     if [[ ${RANLIB:-false} != false ]]; then
-        CMAKE_EXTRA_ARGS="${CMAKE_EXTRA_ARGS} -DCMAKE_RANLIB=${RANLIB}"
+        export CMAKE_EXTRA_ARGS="${CMAKE_EXTRA_ARGS} -DCMAKE_RANLIB=${RANLIB}"
     fi
     if [[ ${NM:-false} != false ]]; then
-        CMAKE_EXTRA_ARGS="${CMAKE_EXTRA_ARGS} -DCMAKE_NM=${NM}"
+        export CMAKE_EXTRA_ARGS="${CMAKE_EXTRA_ARGS} -DCMAKE_NM=${NM}"
     fi
     mkdir build && cd build
     ${MASON_HOME}/bin/cmake ../ -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX} \
@@ -120,3 +126,6 @@ function main() {
 }
 
 main
+
+set +eu
+set +o pipefail
