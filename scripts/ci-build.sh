@@ -32,7 +32,7 @@ function install_build_deps() {
     ./.mason/mason install cmake ${CMAKE_VERSION}
     ./.mason/mason install clang ${CLANG_VERSION}
     export PATH=$(./.mason/mason prefix ccache ${CCACHE_VERSION})/bin:${PATH}
-    export PATH=$(./.mason/mason prefix cmake ${CMAKE_VERSION})/bin:${PATH}
+    export CMAKE_PATH=$(./.mason/mason prefix cmake ${CMAKE_VERSION})/bin
     export PATH=$(./.mason/mason prefix clang ${CLANG_VERSION})/bin:${PATH}
     export CC=clang-3.8
     export CXX=clang++-3.8
@@ -59,7 +59,7 @@ function main() {
         export CMAKE_EXTRA_ARGS="${CMAKE_EXTRA_ARGS} -DCMAKE_NM=${NM}"
     fi
     mkdir build && cd build
-    ${MASON_HOME}/bin/cmake ../ -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX} \
+    ${CMAKE_PATH}/cmake ../ -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX} \
       -DCMAKE_CXX_COMPILER="${CXX}" \
       -DBoost_NO_SYSTEM_PATHS=ON \
       -DTBB_INSTALL_DIR=${MASON_HOME} \
@@ -81,7 +81,7 @@ function main() {
     cd ../
     mkdir -p example/build
     cd example/build
-    ${MASON_HOME}/bin/cmake ../ -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
+    ${MASON_HOME}/bin/cmake ../ -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DLibOSRM_LIBRARIES=${INSTALL_PREFIX}/lib/libosrm.a
     make
     cd ../../
     cp ${MASON_HOME}/lib/libtbb* ./build/
